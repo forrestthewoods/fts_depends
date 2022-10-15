@@ -1,0 +1,27 @@
+[package]
+name = "fts_depends"
+version = "0.0.1"
+authors = ["Forrest Smith <forrestthewoods@gmail.com>"]
+edition = "2021"
+description = """
+CLI to recursively query binary dependencies .
+"""
+documentation = "https://github.com/forrestthewoods/fts_depends"
+homepage  = "https://github.com/forrestthewoods/fts_depends"
+repository  = "https://github.com/forrestthewoods/fts_depends"
+readme = "readme.md"
+keywords = ["gitignore", "ignore"]
+categories = ["command-line-utilities"]
+license = "Unlicense OR MIT"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.0.15", features = ["derive"] }
+dirs = "4.0.0"
+subprocess = "0.2.9"
+walkdir = "2.3.2"
+which = "4.3.0"
+
+[profile.release]
+lto = false
+codegen-units = 16
