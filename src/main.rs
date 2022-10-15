@@ -1,4 +1,5 @@
 use clap::Parser;
+use ptree::TreeBuilder;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -10,9 +11,6 @@ struct Args {
 
     #[arg(short, long, help = "Enable to show system libraries")]
     show_system: bool,
-
-    #[arg(short = 'd', long, help = "Enable to show duplicates (tree-view only)")]
-    show_dupes: bool,
 
     #[arg(short = 'd', long, help = "Enable to print dependencies as a tree")]
     tree_print: bool,
@@ -102,6 +100,19 @@ fn print_table_dep(table: &mut prettytable::Table, dep: &Dependency) {
 }
 
 fn print_tree(root: &Dependency) {
+    let mut tree = TreeBuilder::new(root.name.to_string_lossy().to_string());
+    for child in &root.children {
+        add_tree_child(&mut tree, child);
+    }
+    ptree::print_tree(&tree.build()).unwrap();
+}
+
+fn add_tree_child(tree: &mut ptree::TreeBuilder, dep: &Dependency) {
+    tree.begin_child(dep.name.to_string_lossy().to_string());
+    for child in &dep.children {
+        add_tree_child(tree, child);
+    }
+    tree.end_child();
 }
 
 fn find_deps(
