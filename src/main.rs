@@ -100,7 +100,7 @@ fn print_table_dep(table: &mut prettytable::Table, dep: &Dependency) {
 }
 
 fn print_tree(root: &Dependency) {
-    let mut tree = TreeBuilder::new(root.name.to_string_lossy().to_string());
+    let mut tree = TreeBuilder::new(get_tree_name(root));
     for child in &root.children {
         add_tree_child(&mut tree, child);
     }
@@ -108,11 +108,18 @@ fn print_tree(root: &Dependency) {
 }
 
 fn add_tree_child(tree: &mut ptree::TreeBuilder, dep: &Dependency) {
-    tree.begin_child(dep.name.to_string_lossy().to_string());
+    tree.begin_child(get_tree_name(dep));
     for child in &dep.children {
         add_tree_child(tree, child);
     }
     tree.end_child();
+}
+
+fn get_tree_name(dep: &Dependency) -> String {
+    match dep.path {
+        Some(_) => dep.name.to_string_lossy().to_string(),
+        None => format!("⚠️ {}", dep.name.to_string_lossy())
+    }
 }
 
 fn find_deps(
