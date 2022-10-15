@@ -1,5 +1,4 @@
 use clap::Parser;
-use std::io::Write;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -28,10 +27,19 @@ fn main() -> anyhow::Result<()> {
     // Invoke command and capture output
     let output = cmd.output().expect(&format!("failed to run [{:?}]", &dumpbin));
 
-    // Print results
-    println!("status: {}", output.status);
-    std::io::stdout().write_all(&output.stdout).unwrap();
-    std::io::stderr().write_all(&output.stderr).unwrap();
+    let stdout = String::from_utf8(output.stdout)?;
+
+    // Extract dependencies
+    let start_str = "Image has the following dependencies:";
+    let end_str = "Summary";
+    
+    let start_idx = stdout.find(start_str).expect("Failed to find start_str in stdout");
+    let end_idx = stdout.find(end_str).expect("Failed to find end_str in stdout");
+
+    let deps_str = stdout[start_idx + start_str.len()..end_idx].trim();
+    let deps : Vec<&str> = deps_str.lines().map(|line| line.trim()).collect();
+
+    println!("deps: {:?}", deps);
 
     Ok(())
 }
