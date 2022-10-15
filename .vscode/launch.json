@@ -10,6 +10,7 @@
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/fts_depends.exe",
             "args": [
+                "c:/stuff/path/cvdump.exe"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
