@@ -66,8 +66,8 @@ fn main() -> anyhow::Result<()> {
     ]);
     //table.add_row(prettytable::row!["Dep", "Loc"]);
     for dep in &deps {
-        let loc_str = match which::which(dep)
-            .or_else(|_| which::which_in(dep, Some(&target_dir), &target_dir))
+        let loc_str = match which::which_in(dep, Some(&target_dir), &target_dir)
+            .or_else(|_| which::which(dep))
         {
             Ok(path) => path.to_string_lossy().into_owned(),
             Err(_) => "⚠ Not Found ⚠".to_owned(),
