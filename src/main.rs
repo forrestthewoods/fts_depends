@@ -14,6 +14,9 @@ struct Args {
     #[arg(short = 'd', long, help = "Enable to show duplicates (tree-view only)")]
     show_dupes: bool,
 
+    #[arg(short = 'd', long, help = "Enable to print dependencies as a tree")]
+    tree_print: bool,
+
     // Positional arguments
     #[arg(help = "Binary to calculate dependencies for.")]
     target: PathBuf,
@@ -33,21 +36,6 @@ enum DependsError {
 
     #[error("⚠️ File not found ⚠️")]
     NotFound,
-}
-
-fn printer(table: &mut prettytable::Table, dep: &Dependency, depth: i32) {
-    let loc_str = match &dep.path {
-        Some(path) => path.to_string_lossy().into_owned(),
-        None => "⚠️ Not Found ⚠️".to_owned(),
-    };
-    table.add_row(prettytable::row![
-        &dep.name.to_string_lossy(),
-        loc_str.as_str()
-    ]);
-
-    for child in &dep.children {
-        printer(table, child, depth + 1);
-    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -71,20 +59,49 @@ fn main() -> anyhow::Result<()> {
     let mut visited: HashSet<PathBuf> = Default::default();
     visited.insert(args.target.file_name().unwrap().into());
 
-    let deps = find_deps(&dumpbin, &args.target, &target_dir, &args, &mut visited);
+    let deps = find_deps(&dumpbin, &args.target, &target_dir, &args, &mut visited)?;
 
+    print(&deps, &args);
+
+    Ok(())
+}
+
+fn print(root: &Dependency, args: &Args) {
+    if args.tree_print {
+        print_tree(root);
+    } else {
+        print_table(root);
+    }
+}
+
+fn print_table(root: &Dependency) {
     let mut table = prettytable::Table::new();
     table.set_titles(prettytable::row![
         "Dependency",
         "Resolved Location (best guess)"
     ]);
-    for dep in &deps {
-        printer(&mut table, dep, 0);
-    }
+
+    print_table_dep(&mut table, root);
     table.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
     table.printstd();
+}
 
-    Ok(())
+fn print_table_dep(table: &mut prettytable::Table, dep: &Dependency) {
+    let loc_str = match &dep.path {
+        Some(path) => path.to_string_lossy().into_owned(),
+        None => "⚠️ Not Found ⚠️".to_owned(),
+    };
+    table.add_row(prettytable::row![
+        &dep.name.to_string_lossy(),
+        loc_str.as_str()
+    ]);
+
+    for child in &dep.children {
+        print_table_dep(table, child);
+    }
+}
+
+fn print_tree(root: &Dependency) {
 }
 
 fn find_deps(
