@@ -164,6 +164,7 @@ dependencies = [
  "dirs",
  "prettytable-rs",
  "subprocess",
+ "thiserror",
  "walkdir",
  "which",
 ]
