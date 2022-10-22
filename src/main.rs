@@ -218,6 +218,7 @@ fn extract_deps(dumpbin_str: &str) -> anyhow::Result<Vec<&str>> {
             substr
                 .lines()
                 .take_while(|line| !line.is_empty())
+                .filter(|line| line.ends_with(".dll")) // ignore warnings
                 .map(|line| line.trim()),
         );
     }
@@ -268,4 +269,32 @@ fn find_dumpbin() -> anyhow::Result<PathBuf> {
 
     // Failed to find
     anyhow::bail!("Failed to find dumpbin.exe")
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn warning_lnk4078() {
+        // Trimmed from SkyrimSE.exe
+        // https://github.com/forrestthewoods/fts_depends/issues/1
+        let dumpbin_output = "Image has the following dependencies:
+
+    bink2w64.dll
+    steam_api64.dll
+LINK : warning LNK4078: multiple '.text' sections found with different attributes (C0000040)
+
+    Summary
+
+        16EF000 .data";
+
+        let deps = extract_deps(dumpbin_output);
+        let expected = vec![
+            "bink2w64.dll",
+            "steam_api64.dll",
+        ];
+        assert_eq!(deps.unwrap(), expected);
+    }
 }
